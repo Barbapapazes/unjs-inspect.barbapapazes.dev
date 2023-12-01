@@ -1,0 +1,25 @@
+name: Unlighthouse CI
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 0 7 * * 1/3 # Every Monday and Thursday at 7am UTC
+
+jobs:
+  assertions-and-static-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Dependencies
+        run: npm install -g @unlighthouse/cli puppeteer netlify-cli
+
+      - name: Unlighthouse assertions and client
+        run: unlighthouse-ci --site unjs.io --budget 75 --build-static
+
+      - run: netlify deploy --dir=.unlighthouse --prod --message="New Release Deploy from GitHub Actions"
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
